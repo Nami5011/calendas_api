@@ -22,4 +22,5 @@ Route::group(['prefix' => 'v1', 'namespace' => 'App\Http\Controllers\Api\V1'], f
 	Route::apiResource('calendarSetting', CalendarSettingController::class);
 	Route::apiResource('googleCalendar', GoogleCalendarController::class);
 	Route::apiResource('googleOauth', GoogleOauthController::class);
+	Route::apiResource('user', UserController::class);
 });

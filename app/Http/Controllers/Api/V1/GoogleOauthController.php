@@ -8,6 +8,7 @@ use App\Models\GoogleService;
 use App\Models\PersonalAccessToken;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
+use App\Helpers\LogHelper;
 
 class GoogleOauthController extends Controller
 {
@@ -15,72 +16,60 @@ class GoogleOauthController extends Controller
     {
 		// return ['result' => 'ok'];
 		Log::channel('stderr')->info('OAUTH IS CALLED');
-		Log::channel('stderr')->info('code');
-		Log::channel('stderr')->info($_GET['code']);
         $client = $this->GoogleService()->getClient();
 
 		// Google Oauth URL
 		$result = [
 			'url' => $client->createAuthUrl(),
 		];
-
-		// Oauth using Refresh Token
-		// $token = $client->fetchAccessTokenWithRefreshToken($refreshToken);
-
-		// if ($client->isAccessTokenExpired() && empty($token)) {
-		// 	return ['success' => false, 'message' => ['認証に失敗しました。']];
-		// }
 		return $result;
     }
 
     public function store(Request $request)
     {
 		$authCode = $request->json('code');
-		Log::channel('stderr')->info('$request', $request);
-		Log::channel('stderr')->info('$authCode', $authCode);
+
 		if (empty($authCode)) {
 			// Error
 			return response()->json(['error' => 'Internal Server Error - No auth code'], 500);
 		}
 		$client = $this->GoogleService()->getClient();
-		$googleOauth = $this->GoogleService()->getOauthService($client);
-		$client->authenticate($authCode);
 		$token = $client->fetchAccessTokenWithAuthCode($authCode);
+		// $client->authenticate($authCode);
+		// $token = $client->getAccessToken();
 		if (isset($token['access_token'])) {
 			$client->setAccessToken($token['access_token']);
 		}
+		LogHelper::Log('$token');
+		LogHelper::Log($token);
+
 		if (empty($client->getAccessToken())) {
+			Log::channel('daily')->info('failed getAccessToken');
 			// Error
 			return response()->json(['error' => 'Internal Server Error - No access token'], 500);
 		}
 
 		// Get user profile data from google
-		$googleUserProfile = $googleOauth->userinfo->get();
-		Log::channel('stderr')->info('google_user_profile', $googleUserProfile);
-		// Getting user profile info 
-		$userData = array();
-		$userData['oauth_uid'] = !empty($googleUserProfile['id']) ? $googleUserProfile['id'] : '';
-		$userData['email']     = !empty($googleUserProfile['email']) ? $googleUserProfile['email'] : '';
-		$userData['locale']    = !empty($googleUserProfile['locale']) ? $googleUserProfile['locale'] : '';
-		$userData['picture']   = !empty($googleUserProfile['picture']) ? $googleUserProfile['picture'] : '';
+		$googleUserProfile = $this->GoogleService()->getUserinfoOauth($client);
+		LogHelper::Log('google_user_profile', $googleUserProfile);
 		
 		// Get User 
-		$storedUser = $this->getOrCreateUser($userData);
+		$storedUser = $this->getOrCreateUser($googleUserProfile);
 		if (!isset($storedUser)) {
 			// Error
 			return response()->json(['error' => 'Internal Server Error - Failed get/create user'], 500);
 		}
 		// Update Token
-		$storedToken = $this->updateOrCreateToken($userData, $token);
+		$storedToken = $this->updateOrCreateToken($storedUser->id, $googleUserProfile, $token);
 		if (!isset($storedToken)) {
 			// Error
 			return response()->json(['error' => 'Internal Server Error - Failed update/create token'], 500);
 		}
 
 		$result             = array();
-		$result['email']    = $userData['email'];
-		$result['locale']   = $userData['locale'];
-		$result['picture']  = $userData['picture'];
+		$result['email']    = $googleUserProfile['email'];
+		$result['locale']   = $googleUserProfile['locale'];
+		$result['picture']  = $googleUserProfile['picture'];
 		$result['user_id']  = $storedUser->id;
 		$result['token_id'] = $storedToken->id;
 		return $result;
@@ -96,19 +85,19 @@ class GoogleOauthController extends Controller
 		return $user;
 	}
 
-	private function updateOrCreateToken($userData, $token) {
+	private function updateOrCreateToken($id, $userData, $token) {
 		// Save Token
 		$updatedToken = PersonalAccessToken::updateOrCreate(
 			[
 				// update target columns
 				'refresh_token' => $token['refresh_token'],
-				'access_token' => $token['access_token'],
-			],
-			[
+				'access_token'  => $token['access_token'],
+				'is_active'     => true,
+			],[
 				// matching arguments
-				'user_id' => 0,
-				'oauth_uid' => $userData['oauth_uid'],
-				'service_name' => 'Google Calendar',
+				'user_id'      => $id,
+				'oauth_uid'    => $userData['oauth_uid'],
+				'service_name' => PersonalAccessToken::SERVICE_NAME_GOOGLE,
 			],
 		);
 		return $updatedToken;
