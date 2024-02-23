@@ -18,3 +18,4 @@ yarn-error.log
 /.idea
 /.vscode
 /app/google/client_secret_oauth.json
+ca-certificates.crt

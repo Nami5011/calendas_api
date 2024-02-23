@@ -16,11 +16,10 @@ class LogHelper
 
 	public static function info($param1, $param2=null)
 	{
-		if (isset($param1)) {
-			Log::info(print_r($param1, true));
-		}
-		if (isset($param2)) {
-			Log::info(print_r($param2, true));
+		if (!empty($param1) && !empty($param2)) {
+			Log::channel('errorlog')->info($param1, [$param2]);
+		} else if (!empty($param1)) {
+			Log::channel('errorlog')->info($param1);
 		}
 	}
 

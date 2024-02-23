@@ -14,7 +14,7 @@ class UserController extends Controller
 {
 	public function index()
 	{
-		$encodedEmail = isset($_GET['id']) ? $_GET['id'] : '';
+		$encodedEmail = isset($_GET['key']) ? $_GET['key'] : '';
 		$email = base64_decode(urldecode($encodedEmail));
 		$storedUser = User::where('email', $email)->select('id')->first();
 
