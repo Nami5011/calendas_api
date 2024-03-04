@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\GoogleService;
+use Illuminate\Support\Facades\Log;
 use App\Models\PersonalAccessToken;
 use App\Models\User;
-use Illuminate\Support\Facades\Log;
 use App\Helpers\LogHelper;
+use App\Helpers\GoogleService;
 
 class GoogleOauthController extends Controller
 {
@@ -16,7 +16,7 @@ class GoogleOauthController extends Controller
     {
 		// return ['result' => 'ok'];
 		Log::channel('stderr')->info('OAUTH IS CALLED');
-        $client = $this->GoogleService()->getClient();
+        $client = GoogleService::getClient();
 
 		// Google Oauth URL
 		$result = [
@@ -33,7 +33,7 @@ class GoogleOauthController extends Controller
 			// Error
 			return response()->json(['error' => 'Internal Server Error - No auth code'], 500);
 		}
-		$client = $this->GoogleService()->getClient();
+		$client = GoogleService::getClient();
 		$token = $client->fetchAccessTokenWithAuthCode($authCode);
 		// $client->authenticate($authCode);
 		// $token = $client->getAccessToken();
@@ -50,7 +50,7 @@ class GoogleOauthController extends Controller
 		}
 
 		// Get user profile data from google
-		$googleUserProfile = $this->GoogleService()->getUserinfoOauth($client);
+		$googleUserProfile = GoogleService::getUserinfoOauth($client);
 		LogHelper::Log('google_user_profile', $googleUserProfile);
 		
 		// Get User 
@@ -76,7 +76,8 @@ class GoogleOauthController extends Controller
 	}
 
 	private function getOrCreateUser($userData) {
-		$user = User::where('email', $userData['email'])->select('id', 'name', 'email')->first();
+		// $user = User::where('email', $userData['email'])->select('id', 'name', 'email')->first();
+		$user = User::byEmail($userData['email'])->first();
 		if (!isset($user)) {
 			$user = User::create([
 				'email' => $userData['email'],
@@ -101,13 +102,6 @@ class GoogleOauthController extends Controller
 			],
 		);
 		return $updatedToken;
-	}
-
-	private function GoogleService() {
-		if (!isset($this->GoogleService)) {
-			$this->GoogleService = new GoogleService();
-		}
-		return $this->GoogleService;
 	}
 
 }

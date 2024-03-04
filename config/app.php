@@ -185,6 +185,8 @@ return [
         // 'Example' => App\Facades\Example::class,
 		'LogHelper' => App\Helpers\LogHelper::class,
 		'DateTimeHelper' => App\Helpers\DateTimeHelper::class,
+		'GoogleService' => App\Helpers\GoogleService::class,
+		'GoogleServiceProcessBundle' => App\Helpers\GoogleServiceProcessBundle::class,
     ])->toArray(),
 
 ];

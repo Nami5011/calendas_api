@@ -23,4 +23,10 @@ class PersonalAccessToken extends Model
 	// public function personalAccessToken() {
 	// 	return $this->belongsTo()
 	// }
+
+	public function scopeGoogleTokenByUserId($query, $id) {
+		return $query->where('user_id', $id)
+						->where('service_name', self::SERVICE_NAME_GOOGLE)
+						->select('id', 'refresh_token', 'access_token', 'is_active');
+	}
 }

@@ -21,6 +21,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::group(['prefix' => 'v1', 'namespace' => 'App\Http\Controllers\Api\V1'], function() {
 	Route::apiResource('calendarSetting', CalendarSettingController::class);
 	Route::apiResource('googleCalendar', GoogleCalendarController::class);
+	// Route::apiResource('googleCalendarList', GoogleCalendarListController::class);
 	Route::apiResource('googleOauth', GoogleOauthController::class);
 	Route::apiResource('user', UserController::class);
+
+	Route::post('googleCalendarList', [\App\Http\Controllers\Api\V1\GoogleCalendarListController::class, 'index']);
 });
