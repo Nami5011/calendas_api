@@ -43,6 +43,7 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
+	// byEmail
 	public function scopeByEmail($query, $email) {
 		return $query->where('email', $email)->select('id', 'name', 'email');
 	}

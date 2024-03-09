@@ -26,4 +26,5 @@ Route::group(['prefix' => 'v1', 'namespace' => 'App\Http\Controllers\Api\V1'], f
 	Route::apiResource('user', UserController::class);
 
 	Route::post('googleCalendarList', [\App\Http\Controllers\Api\V1\GoogleCalendarListController::class, 'index']);
+	Route::get('event', [\App\Http\Controllers\Api\V1\EventController::class, 'getEvent']);
 });

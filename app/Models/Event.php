@@ -15,6 +15,7 @@ class Event extends Model
         'title',
         'event_code',
         'description',
+		'duration',
         'confirmation_message',
         'available_datetime',
         'start_day_length',
@@ -37,12 +38,14 @@ class Event extends Model
         });
     }
 
+	// activeEventByCode
 	public function scopeActiveEventByCode($query, $eventCode) {
 		return $query->where('event_code', $eventCode)
 						->where('is_active', true)
 						->select('user_id',
 						'title',
 						'description',
+						'duration',
 						'confirmation_message',
 						'available_datetime',
 						'start_day_length',
