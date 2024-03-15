@@ -24,6 +24,7 @@ return new class extends Migration
 			$table->integer('count')->nullable();
 			$table->boolean('is_active')->default(true);
 			$table->boolean('send_email_flg')->default(true);
+			$table->unsignedBigInteger('duration')->default(30);
             $table->timestamps();
         });
     }
